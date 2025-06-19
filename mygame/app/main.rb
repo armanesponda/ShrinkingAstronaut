@@ -8,16 +8,16 @@ def tick args
     y: 0,
     w: args.grid.w,
     h: args.grid.h,
-    r: 255,
-    g: 255,
-    b: 255,
+    r: 221,
+    g: 226,
+    b: 226,
   }
 
   args.state.dvd ||= { x: 640,
                        y: 360,
                        w: 73,
                        h: 89,
-                       path: "sprites/astronaut.png",
+                       path: "sprites/astroGuy.png",
                        dx: 5,
                        dy: 5,
                        collision_x: false,
@@ -37,46 +37,41 @@ def tick args
   args.state.dvd.collision_x = false
   args.state.dvd.collision_y = false
 
-  args.state.dvd.y += args.state.dvd.dy
-  collision = args.state.boundaries.find do |boundary|
-    Geometry.intersect_rect?(args.state.dvd, boundary)
+  next_x = args.state.dvd.x + args.state.dvd.dx
+  next_y = args.state.dvd.y + args.state.dvd.dy
+
+  future_dvd_x = args.state.dvd.merge(x: next_x)
+  future_dvd_y = args.state.dvd.merge(y: next_y)
+  
+  collision_y = args.state.boundaries.find do |boundary|
+    Geometry.intersect_rect?(future_dvd_y, boundary)
   end
 
-  if collision
-    if args.state.dvd.dy > 0
-      args.state.dvd.y = collision.y - args.state.dvd.h
-      args.state.dvd.dy *= -1
-    elsif args.state.dvd.dy < 0
-      args.state.dvd.y = collision.y + collision.h
-      args.state.dvd.dy *= -1
-    end
+  if collision_y
+    args.state.dvd.dy *= -1
     args.state.dvd.collision_y = true
+  else
+    args.state.dvd.y = next_y
   end
 
-  args.state.dvd.x += args.state.dvd.dx
-  collision = args.state.boundaries.find do |boundary|
-    Geometry.intersect_rect?(args.state.dvd, boundary)
+  collision_x = args.state.boundaries.find do |boundary|
+    Geometry.intersect_rect?(future_dvd_x, boundary)
   end
 
-  boundries = args.state.boundaries.find_all { |boundary| Geometry.intersect_rect?(args.state.dvd, boundary) }
-  if boundries.length > 0
-    puts "Collision detected with boundaries: #{boundries.inspect}"
-  end
-
-  if collision
-    if args.state.dvd.dx > 0
-      args.state.dvd.x = collision.x - args.state.dvd.w
-      args.state.dvd.dx *= -1
-    elsif args.state.dvd.dx < 0
-      args.state.dvd.x = collision.x + collision.w
-      args.state.dvd.dx *= -1
-    end
+  if collision_x
+    args.state.dvd.dx *= -1
     args.state.dvd.collision_x = true
+  else
+    args.state.dvd.x = next_x
   end
+
+  args.state.dvd_angle ||= 0
+  args.state.dvd_angle += 1
 
   args.outputs.watch "#{args.state.dvd}"
   args.outputs.sprites << args.state.boundaries
-  args.outputs.sprites << args.state.dvd
+  args.outputs.sprites << args.state.dvd.merge(angle: args.state.dvd_angle)
+  #args.outputs.borders << args.state.dvd.merge(r: 255, g: 0, b: 0)
   
   if args.state.stars_enabled
     if args.tick_count - args.state.last_star_update > 80
@@ -162,5 +157,3 @@ def spawn_stars(args)
     path: 'sprites/star2.png',
   }
 end
-
-# GTK.reset_and_replay "replay.txt", speed: 1
