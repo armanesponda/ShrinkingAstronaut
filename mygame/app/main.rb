@@ -17,7 +17,7 @@ def tick args
                        y: 360,
                        w: 73,
                        h: 89,
-                       path: "sprites/astroGuy.png",
+                       path: "sprites/AstroGuy.png",
                        dx: 5,
                        dy: 5,
                        collision_x: false,
@@ -29,6 +29,16 @@ def tick args
     { target_h: 5, growth_direction: :y, apply_offset: false, x: 0, y: 0, w: 1280, h: 5, path: :solid, r: 0, g: 0, b: 0 },
     { target_h: 5, growth_direction: :y, apply_offset: true, x: 0, y: 715, w: 1280, h: 5, path: :solid, r: 0, g: 0, b: 0 },
   ]
+
+  args.state.moon ||= {
+    x: 1142,
+    y: 0,
+    h: 128,
+    w: 128,
+    path: 'sprites/Moon.png',
+  }
+
+  args.state.moon.alpha ||= 0
 
   args.state.stars_enabled ||= false
   args.state.last_star_update ||= 0
@@ -68,7 +78,7 @@ def tick args
   args.state.dvd_angle ||= 0
   args.state.dvd_angle += 1
 
-  args.outputs.watch "#{args.state.dvd}"
+  #args.outputs.watch "#{args.state.dvd}"
   args.outputs.sprites << args.state.boundaries
   args.outputs.sprites << args.state.dvd.merge(angle: args.state.dvd_angle)
   #args.outputs.borders << args.state.dvd.merge(r: 255, g: 0, b: 0)
@@ -80,6 +90,10 @@ def tick args
     end
 
     args.outputs.sprites << args.state.stars
+
+
+    args.state.moon.alpha = args.state.moon.alpha.lerp(255, 0.05)
+    args.outputs.sprites << args.state.moon.merge(a: args.state.moon.alpha)
   end
 
   if args.inputs.keyboard.key_down.space
@@ -91,7 +105,6 @@ def tick args
         boundary.target_h += 5
       end
     end
-
   end
 
   args.state.boundaries.each do |boundary|
